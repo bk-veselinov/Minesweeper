@@ -117,18 +117,106 @@ void printField(const vector<vector<int>>& field,
 }
 
 
-void markCell() {
-    
+
+void markCell(const vector<vector<int>>& field, int x, int y, int& markedBombs, int& flagCount,
+                    vector<vector<bool>>& marked,
+              const vector<vector<bool>>& visited) {
+    int n = field.size();
+
+    if (!isValid(n, x, y))return;
+    if (isVisited(visited, x, y)) {
+        cout << "You cannot mark cells that are revieled\n";
+        return;
+    }
+
+    marked[x][y] = true;
+    flagCount--;
+
+    if (field[x][y]==-1)
+    {
+        markedBombs++;
+    }
 }
 
-void unmarkCell() {
-    
+void unmarkCell(const vector<vector<int>> field, int x, int y, int& markedBombs, int& flagCount, 
+                      vector<vector<bool>>& marked) {
+    int n = field.size();
+    if (!isValid(n, x, y)|| !isMarked(marked, x,y))return;
+
+    marked[x][y] = false;
+    flagCount++;
+
+    if (isBomb(field, x, y))
+    {
+        markedBombs--;
+    }
 }
 
 
+void openSurroundinCells(vector<vector<int>> field, int x, int y, 
+                         vector<vector<bool>>& visited, int& openedCellsCount) {
+    int n = field.size();
+    if (!isValid(n, x, y))
+    {
+        return;
+    }
+    if (isVisited(visited, x, y))
+    {
+        return;
+    }
+    if (field[x][y] == -1)
+    {
+        return;
+    }
+    visited[x][y] = true;
+    openedCellsCount++;
 
-void openCell() {
+    if (field[x][y] == 0)
+    {
+        openSurroundinCells(field, x, y + 1, visited, openedCellsCount);
+        openSurroundinCells(field, x, y - 1, visited, openedCellsCount);
 
+        openSurroundinCells(field, x + 1, y, visited, openedCellsCount);
+        openSurroundinCells(field, x - 1, y, visited, openedCellsCount);
+
+        openSurroundinCells(field, x + 1, y + 1, visited, openedCellsCount);
+        openSurroundinCells(field, x - 1, y - 1, visited, openedCellsCount);
+        openSurroundinCells(field, x + 1, y - 1, visited, openedCellsCount);
+        openSurroundinCells(field, x - 1, y + 1, visited, openedCellsCount);
+    }
+
+}
+
+void openCell(      vector<vector<int>>& field, int x, int y,
+                    vector<vector<bool>>& visited, int& openedCellsCount,
+              const vector<vector<bool>>& marked) {
+    int n = field.size();
+    if (!isValid(n, x, y))
+    {
+        cout << "invalid";
+        return;
+    }
+    if (isMarked(marked,x,y))
+    {
+        cout<<"This cell is marked! You must ummark it in order to open it";
+        return;
+    }
+    if (isVisited(visited, x, y))
+    {
+        cout << "This cell has already been opened";
+        return;
+    }
+
+
+    if (field[x][y] == 0)
+    {
+        openSurroundinCells(field, x, y, visited, openedCellsCount);
+    }
+    if (field[x][y]>=1)
+    {
+        visited[x][y] = true;
+        openedCellsCount++;
+    }
 }
 
 
@@ -159,22 +247,21 @@ bool readCommand(string &action, int& x, int& y, int n) {
 
 
 }
-
 void executeCommand(vector<vector<int>>& field ,string action, int x, int y,
                     vector<vector<bool>>& marked, int& markedBombs,int& flagCount, int& openedCellsCount,
                     vector<vector<bool>>& visited) {
     if (action=="mark")
     {
-        markCell();
+        markCell(field, x, y, markedBombs, flagCount, marked, visited);
         return;
     }
 
     if (action =="unmark")
     {
-        unmarkCell();
+        unmarkCell(field, x, y, markedBombs, flagCount, marked);
         return;
     }
-    openCell();
+    openCell(field, x, y, visited, openedCellsCount, marked);
 }
 
 
