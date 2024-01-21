@@ -56,6 +56,32 @@ bool isActionValid(string action) {
     return false;
 
 }
+char calculateFunalFieldSymbolToPrint(const vector<vector<int>>& field,
+                                      int i, int j, int currEl,
+                                      const vector<vector<bool>>& marked,
+                                      const vector<vector<bool>>& visited,
+                                      bool hasWon)
+{
+    if (hasWon)
+    {
+        if (currEl == 0) return EMPTY_CELL;
+
+        if (field[i][j] == -1) return FLAG;
+
+        return currEl + '0';
+    }
+
+    if (isMarked(marked, i, j)) return FLAG;
+
+    if (field[i][j] == -1) return BOMB;
+
+    if (!isVisited(visited, i, j)) return HIDDEN_CELL;
+
+    if (currEl == 0) return EMPTY_CELL;
+
+
+    return currEl + '0';
+}
 
 void printFieldYCoordinatesNumber(int fieldSize) {
 
@@ -75,6 +101,29 @@ void printFieldYCoordinatesNumber(int fieldSize) {
     std::cout << '\n';
 }
 
+
+void printFinalField(const vector<vector<int>>& field,
+                     const vector<vector<bool>>& marked,
+                     const vector<vector<bool>>& visited,
+                     bool hasWon) {
+
+    int fieldSize = field.size();
+
+    printFieldYCoordinatesNumber(fieldSize);
+
+    for (size_t i = 0; i < fieldSize; i++)
+    {
+        for (size_t j = 0; j < fieldSize; j++)
+        {
+            int currEl = field[i][j];
+
+            char currSympol = calculateFunalFieldSymbolToPrint(field, i, j, currEl, marked, visited, hasWon);
+
+            cout << ' ' << currSympol << ' ';
+        }
+        cout << " | " << i << '\n';
+    }
+}
 
 char calculateSymbolToPrint(const vector<vector<int>>& field,
                             int i, int j, int currEl,
@@ -115,7 +164,6 @@ void printField(const vector<vector<int>>& field,
         cout<<" | " << i << '\n';
     }
 }
-
 
 
 void markCell(const vector<vector<int>>& field, int x, int y, int& markedBombs, int& flagCount,
@@ -217,8 +265,12 @@ void openCell(      vector<vector<int>>& field, int x, int y,
         visited[x][y] = true;
         openedCellsCount++;
     }
-}
+    
 
+}
+bool isNumber(int x, int y) {
+    return true;
+}
 
 bool checkCoordinatInput(int n, int x, int y) {
     
@@ -247,6 +299,7 @@ bool readCommand(string &action, int& x, int& y, int n) {
 
 
 }
+
 void executeCommand(vector<vector<int>>& field ,string action, int x, int y,
                     vector<vector<bool>>& marked, int& markedBombs,int& flagCount, int& openedCellsCount,
                     vector<vector<bool>>& visited) {
@@ -266,9 +319,27 @@ void executeCommand(vector<vector<int>>& field ,string action, int x, int y,
 
 
 
-bool isOver()
+bool isOver(const vector<vector<int >>& field, 
+                  vector<vector<bool>>& visited,
+            const vector<vector<bool>>& marked,
+            int x, int y, bool& hasWon, string currAction,
+            int bombsCount, int flagCount, int openedCellsCount, int markedBombs)
 {
+    int allCells = field.size() * field.size();
     
+    if (markedBombs == bombsCount && allCells - openedCellsCount == bombsCount && flagCount==0)
+    {
+        hasWon = true;
+        return true;
+    }
+    if (field[x][y]==-1 && currAction=="open" && marked[x][y]==false)
+    {
+        visited[x][y] = true;
+
+        hasWon = false;
+        return true;
+    }
+    return false;
 }
 
 
@@ -372,6 +443,8 @@ void readInput(int& n, int& bombsCount) {
     }
 }
 
+
+
 void playMineSweeper() {
     int n = 0;
     int bombsCount = 0;
@@ -401,12 +474,16 @@ void playMineSweeper() {
 
         executeCommand(field, action, x, y, marked, markedBombs, flagCount, openedCellsCount, visited);
 
-    
+        if (isOver(field, visited, marked, x, y,hasWon, action, bombsCount, flagCount, openedCellsCount, markedBombs))
+        {
+            cout << "The game is over";
+            break;
+        }
         printField(field, marked, visited);
 
 
     }
-    printField(field, marked, visited);
+    printFinalField(field, marked, visited, hasWon);
     if (hasWon)
     {
         cout << "You win";
@@ -420,4 +497,3 @@ int main()
 {
     playMineSweeper();
 }
-
